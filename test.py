@@ -1,10 +1,8 @@
 import cv2
-from os import listdir
 from test_utils.detect_utils import infer_image
-from randimage import get_random_image
-import matplotlib
 import argparse
-
+import json
+# import chart
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -53,6 +51,7 @@ if __name__ == '__main__':
             # print(data)
             dictName[data[0]] = data[1]
     f.close()
+    dictStat = {}
 
     numTrue = 0
     numImg = 0
@@ -61,6 +60,8 @@ if __name__ == '__main__':
     rs_file = open(outputFile,'w')
 
     for key,value in dictName.items():
+        if value not in dictStat:
+            dictStat[value] = {'num_true': 0, 'num_false': 0}
         numImg += 1
         imgRoot = cv2.imread(folder_test + key)
         h = imgRoot.shape[0]
@@ -68,7 +69,7 @@ if __name__ == '__main__':
         img = cv2.resize(img, (40,30)) # got image same size with traning data then scale to yolo size
         img = cv2.resize(img, yolo_size)
         frame_3, boxes1, confidences, classids, idxs = infer_image(
-                netDetect, layer_names, yolo_size[0], yolo_size[1], img, thresh=0.1)
+                netDetect, layer_names, yolo_size[0], yolo_size[1], img, thresh=0.01)
         # print(boxes1, confidences, classids, idxs)
         heroName = ''
         if len(idxs) > 0:
@@ -84,13 +85,18 @@ if __name__ == '__main__':
                 heroName = labels[bestClass]
             if heroName == value:
                 numTrue += 1
+                dictStat[value]['num_true'] += 1
             else:
                 print(value, '=========', heroName)
+                dictStat[value]['num_false'] += 1
         else:
             print(value, '=========', heroName)
+            dictStat[value]['num_false'] += 1
         rs_file.write(key + '\t' + heroName + '\n')
         # cv2.imwrite('./real_test/' + str(numImg) + '.jpg', img)
         # cv2.imshow('check', img)
         # cv2.waitKey()
     print(f'ACCURACY : {numTrue/numImg*100}')
     rs_file.close()
+    s = json.dumps(dictStat)
+    open("result.json","w").write(s)

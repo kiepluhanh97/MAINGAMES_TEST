@@ -61,6 +61,3 @@ for i in range(NUM_IMG):
             f.close()
             numImg += 1
 
-
-
-

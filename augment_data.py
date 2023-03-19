@@ -15,7 +15,7 @@ def preprocess_scale(im, boxes):
     image_aug, boxes_aug = seq(image=im, bounding_boxes=imgboxes)
     image_aug = ia.imresize_single_image(image_aug, im.shape[0:2])
     boxes_aug = boxes_aug.on(image_aug)
-    boxes = boxes_aug.to_xyxy_array(dtype=np.int)
+    boxes = boxes_aug.to_xyxy_array(dtype=np.int32)
     return image_aug, boxes
 
 folder_images = './dataset/'

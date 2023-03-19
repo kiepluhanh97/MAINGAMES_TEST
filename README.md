@@ -39,3 +39,17 @@ when have dataset folder, run python3 gen.py to create train.txt file and test.t
 5. test on test set
 run 
 python3 test.py --model-path './train_src/backup-tiny/custom-obj-tiny_last.weights' --cfg-path './train_src/custom-obj-tiny.cfg' --images-path './test_data/test_images/' --labels-path './test_data/test.txt'
+
+run 
+python3 drawchart.py
+to se statistic char of the detect result.
+
+install python evr:
+pip3 install --no-cache-dir -r requirements.txt
+
+run with docker
+sudo docker build -t my-python-app .
+sudo docker run -it --rm my-python-app
+
+The result will be better if have more time to train on yolov4 or yolov7 model and more process on the detaset.
+But not enough time to train when using on kaggle free version. 
