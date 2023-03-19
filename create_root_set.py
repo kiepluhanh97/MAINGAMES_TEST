@@ -6,64 +6,60 @@ import random
 import time
 import numpy as np
 import matplotlib
-img_size = (50,50)
-NUM_IMG = 10
+img_size = (30,40)
+# yolo_size = 416
+# root_size = (416,416)
+NUM_IMG = 20
 images_folder = './characters/'
 dataset_folder = './dataset/'
 if not os.path.exists(dataset_folder):
     os.mkdir(dataset_folder)
 for eachFile in listdir(dataset_folder):
     os.remove(dataset_folder + eachFile)
-
+f = open('./class_list.txt')
+labels = f.read().split('\n')
 numImg = 1
 for i in range(NUM_IMG):
     for eachImg in listdir(images_folder):
-        char_img = cv2.imread(images_folder + eachImg)
-        # cv2.imshow('check', char_img)
-        # cv2.waitKey()
-        char_img = cv2.resize(char_img, (40,40))
-        c_h,c_w = char_img.shape[:2]
-        print(c_h,c_w)
-        time1 = time.time()
-        img = get_random_image(img_size)  #returns numpy array
-        matplotlib.image.imsave("check.jpg", img)
-        img = cv2.imread('check.jpg')
-        big_img = cv2.resize(img, (416,416))
-        print('Time create img: ', time.time() - time1)
-        x_offset = random.randint(10, 416-10-c_w)
-        y_offset = random.randint(10,40)
+        charName = eachImg[:len(eachImg) - 4]
+        index = labels.index(charName)
+        if index >= 0:
+            char_img = cv2.imread(images_folder + eachImg)
+            # cv2.imshow('check', char_img)
+            # cv2.waitKey()
+            # char_img = cv2.resize(char_img, (20,20))
+            c_h,c_w = char_img.shape[:2]
+            print(c_h,c_w)
+            time1 = time.time()
+            img = get_random_image(img_size)  #returns numpy array
+            matplotlib.image.imsave("check.jpg", img)
+            big_img = cv2.imread('check.jpg')
+            print('Time create img: ', time.time() - time1)
+            x_offset = random.randint(5, 15)
+            y_offset = random.randint(2,8)
+            cx,cy = x_offset + c_w/2, y_offset + c_h/2
 
+            stringWrite = str(index) + ' ' + str(cx/img_size[1]) + ' ' + str(cy/img_size[0]) + ' ' + str(c_w/img_size[1]) + ' ' + str(c_h/img_size[0]) + '\n'
 
-        dim = (c_w, c_h)
-        small_img_resized = cv2.resize(char_img, dim, interpolation=cv2.INTER_AREA)
+            newWrapimg = big_img[y_offset:y_offset + c_h, x_offset:x_offset + c_w]
+            # Create a mask with a circle of the desired size
+            mask = np.zeros_like(newWrapimg)
+            circle_center = tuple(np.array(newWrapimg.shape[:2]) // 2)
+            circle_radius = c_w // 2
+            cv2.circle(mask, circle_center, circle_radius, (255, 255, 255), -1)
 
-        # Create circular mask
-        mask = np.zeros(small_img_resized.shape[:2], dtype=np.uint8)
-        center = (int(mask.shape[1]/2), int(mask.shape[0]/2))
-        radius = int(min(mask.shape)/2)
-        cv2.circle(mask, center, radius, 255, -1)
+            # Paste the small image onto the big image using the mask
+            output_img = np.zeros_like(newWrapimg)
+            output_img[mask == 255] = char_img[mask == 255]
+            output_img[mask == 0] = newWrapimg[mask == 0]
 
-        # Resize mask to match big image size
-        mask_resized = cv2.resize(mask, (big_img.shape[1], big_img.shape[0]), interpolation=cv2.INTER_AREA)
-
-        # Create complement mask
-        complement_mask = cv2.bitwise_not(mask_resized)
-
-        # Combine the two masks
-        combined_mask = cv2.bitwise_or(mask_resized, complement_mask)
-
-        # Apply mask to small image
-        small_img_masked = cv2.bitwise_and(small_img_resized, small_img_resized, mask=mask)
-
-        # Paste small image onto big image within the circle
-        big_img_masked = big_img.copy()
-        big_img_masked[y_offset:y_offset+small_img_masked.shape[0], x_offset:x_offset+small_img_masked.shape[1]] = small_img_masked
-
-        # Apply combined mask to big image
-        big_img_masked = cv2.bitwise_and(big_img_masked, big_img_masked, mask=combined_mask)
-        # img = img.astype(np.uint8)
-        cv2.imwrite(dataset_folder + str(numImg) + '.jpg', big_img_masked)
-        numImg += 1
+            big_img[y_offset:y_offset + 20, x_offset: x_offset+20] = output_img
+            big_img = cv2.resize(big_img, (416,416))
+            cv2.imwrite(dataset_folder + str(numImg) + '.jpg', big_img)
+            f = open(dataset_folder + str(numImg) + '.txt', 'a')
+            f.write(stringWrite)
+            f.close()
+            numImg += 1
 
 
 

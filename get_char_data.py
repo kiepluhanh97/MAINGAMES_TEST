@@ -37,6 +37,7 @@ for eachImg in listImgText:
     eachImg = eachImg[0]
     nameInfor = eachImg.split('title="')[1].split('"')[0]
     nameInfor = nameInfor.replace('&#39;', '_')
+    nameInfor = nameInfor.replace(' ', '_')
     url = eachImg.split('data-src="')[1].split('"')[0]
     saveWithCV2(url, imageFolder + nameInfor + '.jpg')
     print(nameInfor, url)
